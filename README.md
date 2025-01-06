@@ -18,3 +18,18 @@ PyQT/PySide, PyGTK, wxPython.
 • Należy dbać o stosowanie odpowiednich typów danych (w tym również definiować własne klasy) oraz rodzajów kolekcji do ich przechowywania. Istotne jest też właściwe podzielenie kodu na funkcje i moduły. 
 
 ### Termin oddania; 19.01.2025
+ISMED2024Z_ZAD2
+        ├── example_data
+        │   └── file.py
+        ├── README.md
+        ├── requirements.txt
+        └── src
+            ├── gui
+            │   ├── __init__.py
+            │   └── widgets
+            │       └── file.py
+            ├── images
+            │   └── file.py
+            ├── main.py
+            └── tests
+                └── file.py
