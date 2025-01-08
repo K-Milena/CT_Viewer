@@ -4,7 +4,19 @@ from PyQt5.QtCore import Qt
 
 
 class MainWindow(QMainWindow):
+    """
+    Główne okno aplikacji, które zawiera QSplitter do podzielenia przestrzeni na 3 kolumny.
+    Każda kolumna zawiera widget z etykietą i przyciskiem.
+
+    Aplikacja umożliwia interaktywną zmianę szerokości kolumn za pomocą uchwytów QSplitter.
+    """
     def __init__(self):
+        """
+        Inicjalizuje główne okno aplikacji.
+        
+        Tworzy układ z trzema kolumnami, które można dynamicznie zmieniać za pomocą QSplitter.
+        Każda kolumna zawiera swój widżet.
+        """
         super().__init__()
 
         self.setWindowTitle('CT Dicom')
