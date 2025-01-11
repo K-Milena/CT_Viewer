@@ -18,7 +18,7 @@ class ImageContainer(QWidget):
 
         self.image_label = QLabel("Obraz DICOM")
         self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setStyleSheet("border: 1px solid black;")
+        self.image_label.setStyleSheet("border: none;")
         layout.addWidget(self.image_label)
 
     def display_dicom(self, file_path):
@@ -26,8 +26,8 @@ class ImageContainer(QWidget):
         Wyświetla obraz DICOM w QLabel.
         """
         try:
-            ds = pydicom.dcmread(file_path)  # Wczytaj plik DICOM
-            pixel_array = ds.pixel_array  # Pobierz dane pikselowe
+            ds = pydicom.dcmread(file_path)  
+            pixel_array = ds.pixel_array  
             image = self.to_qimage(pixel_array)
             pixmap = QPixmap.fromImage(image)
             self.image_label.setPixmap(pixmap.scaled(

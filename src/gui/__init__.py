@@ -37,5 +37,14 @@ class MainWindow(QMainWindow):
         layout.addWidget(splitter)
         main_widget.setLayout(layout)
 
+
         self.col1.file_selected.connect(self.col2.display_dicom)
+        
+    def resizeEvent(self, event):
+        """
+        Obsługa zmiany rozmiaru okna.
+        """
+        super().resizeEvent(event)
+        self.centralWidget().setMaximumSize(self.size())
+
 
