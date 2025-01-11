@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 
 class MainWindow(QMainWindow):
     """
-    Główne okno aplikacji, które zawiera QSplitter do podzielenia przestrzeni na 3 kolumny.
+    Główne okno aplikacji.
     """
     def __init__(self):
         super().__init__()
@@ -20,19 +20,22 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout()
         splitter = QSplitter(Qt.Horizontal)
 
-        col1 = DirectoryTreeContainer()
-        col2 = ImageContainer()
-        col3 = ParamsContainer()
+        self.col1 = DirectoryTreeContainer()
+        self.col2 = ImageContainer()
+        self.col3 = ParamsContainer()
 
-        splitter.addWidget(col1)
-        splitter.addWidget(col2)
-        splitter.addWidget(col3)
+        splitter.addWidget(self.col1)
+        splitter.addWidget(self.col2)
+        splitter.addWidget(self.col3)
 
-        col1.setMinimumWidth(100)
-        col2.setMinimumWidth(300)
-        col3.setMinimumWidth(150)
+        self.col1.setMinimumWidth(100)
+        self.col2.setMinimumWidth(300)
+        self.col3.setMinimumWidth(150)
 
         splitter.setSizes([100, 300, 150])
 
         layout.addWidget(splitter)
         main_widget.setLayout(layout)
+
+        self.col1.file_selected.connect(self.col2.display_dicom)
+

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QListWidget, QHBoxLayout, QMessageBox, QScrollArea
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSignal
 
 
 class DirectoryTreeContainer(QWidget):
@@ -13,6 +14,7 @@ class DirectoryTreeContainer(QWidget):
     Widżet odpowiadający za możliwość wyboru katalogu i przegądanego pliku z woluminu Dicom. 
     (może umożliwienie przewijania za pomocą przycisków i strzałek?)
     """
+    file_selected = pyqtSignal(str)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_ui()
@@ -67,5 +69,6 @@ class DirectoryTreeContainer(QWidget):
         Obsługa ładowania pliku po jego kliknięciu na liście.
         """
         file_name = item.text()
+        full_path = os.path.join(self.folder_label.text().replace("Wybrany folder: ", ""), file_name)
         self.preview_label.setText(f"Wybrano plik: {file_name}")
-        #  kod do wczytania i wyswietlenia zawartości pliku dicom
+        self.file_selected.emit(full_path) 
