@@ -22,17 +22,17 @@ class MainWindow(QMainWindow):
 
         self.col1 = DirectoryTreeContainer()
         self.col2 = ImageContainer()
-        self.col3 = ParamsContainer()
+        # self.col3 = ParamsContainer()
 
         splitter.addWidget(self.col1)
         splitter.addWidget(self.col2)
-        splitter.addWidget(self.col3)
+        # splitter.addWidget(self.col3)
 
         self.col1.setMinimumWidth(100)
         self.col2.setMinimumWidth(300)
-        self.col3.setMinimumWidth(150)
+        # self.col3.setMinimumWidth(150)
 
-        splitter.setSizes([100, 300, 150])
+        splitter.setSizes([100, 300])
 
         layout.addWidget(splitter)
         main_widget.setLayout(layout)
