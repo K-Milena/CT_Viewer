@@ -7,18 +7,43 @@ import numpy as np
 
 class ImageLabel(QLabel):
     """
-    QLabel z obsługą rysowania prostokątów ROI.
+    QLabel z obsługą rysowania prostokątów ROI, z ograniczeniem do obszaru obrazu.
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.rois = []  
-        self.current_roi = None  
-        self.start_point = None  
-        self.pixel_array = None  
+        self.rois = []  # Lista przechowująca prostokąty ROI i ich dane
+        self.current_roi = None  # Aktualnie rysowany prostokąt
+        self.start_point = None  # Punkt początkowy dla zaznaczania
+        self.pixel_array = None  # Przechowuje macierz obrazu DICOM
+
+    def get_displayed_image_rect(self):
+        """
+        Zwraca QRect reprezentujący aktualny obszar wyświetlanego obrazu DICOM w QLabel.
+        """
+        if not self.pixmap():
+            return QRect()
+
+        # Rozmiar QLabel i pixmapy
+        label_width, label_height = self.width(), self.height()
+        pixmap_width, pixmap_height = self.pixmap().width(), self.pixmap().height()
+
+        # Oblicz współczynniki skalowania
+        scale = min(label_width / pixmap_width, label_height / pixmap_height)
+
+        # Oblicz rozmiar wyświetlanego obrazu
+        displayed_width = int(pixmap_width * scale)
+        displayed_height = int(pixmap_height * scale)
+
+        # Oblicz przesunięcie (wyrównanie obrazu w QLabel)
+        offset_x = (label_width - displayed_width) // 2
+        offset_y = (label_height - displayed_height) // 2
+
+        # Zwróć QRect wyświetlanego obrazu
+        return QRect(offset_x, offset_y, displayed_width, displayed_height)
 
     def paintEvent(self, event):
         """
-        Rysuje obraz i prostokąty ROI.
+        Rysuje obraz i prostokąty ROI wraz ze statystykami.
         """
         super().paintEvent(event)
         painter = QPainter(self)
@@ -26,21 +51,30 @@ class ImageLabel(QLabel):
         pen = QPen(Qt.red, 2)
         painter.setPen(pen)
 
+        # Rysuj wszystkie zapisane prostokąty
         for rect, roi_stats in self.rois:
             painter.drawRect(rect)
-            text_position = QPoint(rect.x() + rect.width() + 5, rect.y() + 10)
-            painter.drawText(text_position, roi_stats)
+            
+            # Wyświetl statystyki pod sobą
+            stats_lines = roi_stats.split(", ")
+            for i, line in enumerate(stats_lines):
+                text_position = QPoint(rect.x() + rect.width() + 5, rect.y() + 10 + i * 15)  # 15px odstępu między liniami
+                painter.drawText(text_position, line)
 
+        # Rysuj aktualnie przeciągany prostokąt
         if self.current_roi:
             painter.drawRect(self.current_roi)
+
 
     def mousePressEvent(self, event):
         """
         Obsługa kliknięcia myszy.
         """
         if event.button() == Qt.LeftButton:
-            self.start_point = event.pos()
-            self.current_roi = None
+            displayed_image_rect = self.get_displayed_image_rect()
+            if displayed_image_rect.contains(event.pos()):
+                self.start_point = event.pos()
+                self.current_roi = None
         elif event.button() == Qt.RightButton:
             self.remove_roi(event.pos())
         self.update()
@@ -51,7 +85,14 @@ class ImageLabel(QLabel):
         """
         if event.buttons() == Qt.LeftButton and self.start_point:
             end_point = event.pos()
-            self.current_roi = QRect(self.start_point, end_point).normalized()
+            displayed_image_rect = self.get_displayed_image_rect()
+
+            # Ogranicz rysowanie do obszaru wyświetlanego obrazu
+            constrained_start = displayed_image_rect.intersected(QRect(self.start_point, self.start_point))
+            constrained_end = displayed_image_rect.intersected(QRect(end_point, end_point))
+
+            if not constrained_start.isNull() and not constrained_end.isNull():
+                self.current_roi = QRect(constrained_start.topLeft(), constrained_end.bottomRight()).normalized()
             self.update()
 
     def mouseReleaseEvent(self, event):
@@ -82,21 +123,23 @@ class ImageLabel(QLabel):
         if self.pixel_array is None:
             return "Brak danych"
 
-        label_width = self.width()
-        label_height = self.height()
-        pixmap_width = self.pixmap().width()
-        pixmap_height = self.pixmap().height()
+        # Pobierz obszar wyświetlanego obrazu
+        displayed_image_rect = self.get_displayed_image_rect()
 
-        scale_x = self.pixel_array.shape[1] / pixmap_width
-        scale_y = self.pixel_array.shape[0] / pixmap_height
+        # Skalowanie współrzędnych
+        scale_x = self.pixel_array.shape[1] / displayed_image_rect.width()
+        scale_y = self.pixel_array.shape[0] / displayed_image_rect.height()
 
-        x1 = int(rect.x() * scale_x)
-        y1 = int(rect.y() * scale_y)
-        x2 = int((rect.x() + rect.width()) * scale_x)
-        y2 = int((rect.y() + rect.height()) * scale_y)
+        # Przeskaluj współrzędne prostokąta na piksele obrazu DICOM
+        x1 = int((rect.x() - displayed_image_rect.x()) * scale_x)
+        y1 = int((rect.y() - displayed_image_rect.y()) * scale_y)
+        x2 = int((rect.x() + rect.width() - displayed_image_rect.x()) * scale_x)
+        y2 = int((rect.y() + rect.height() - displayed_image_rect.y()) * scale_y)
 
+        # Wyciągnij dane z zaznaczonego obszaru
         cropped_array = self.pixel_array[y1:y2, x1:x2]
 
+        # Oblicz statystyki
         if cropped_array.size > 0:
             min_val = np.min(cropped_array)
             max_val = np.max(cropped_array)
@@ -114,8 +157,6 @@ class ImageContainer(QWidget):
         super().__init__(parent)
         self.init_ui()
 
-        self.pixel_array = None  
-
     def init_ui(self):
         layout = QVBoxLayout(self)
 
@@ -131,8 +172,7 @@ class ImageContainer(QWidget):
         try:
             ds = pydicom.dcmread(file_path)
             pixel_array = ds.pixel_array
-            self.pixel_array = pixel_array  
-            self.image_label.pixel_array = pixel_array  
+            self.image_label.pixel_array = pixel_array  # Przekaż dane do ImageLabel
             image = self.to_qimage(pixel_array)
             pixmap = QPixmap.fromImage(image)
             self.image_label.setPixmap(pixmap.scaled(
@@ -161,4 +201,4 @@ class ImageContainer(QWidget):
                 Qt.KeepAspectRatio,
                 Qt.SmoothTransformation
             ))
-        self.image_label.update()  
+        self.image_label.update()  # Odśwież widok, aby przerysować ROI
