@@ -1,6 +1,5 @@
-from gui.widgets.DirectoryTreeContainer import DirectoryTreeContainer
-from gui.widgets.ImageContainer import ImageContainer
-from gui.widgets.ParamsContainer import ParamsContainer
+from gui.widgets.directory_tree_container import DirectoryTreeContainer
+from gui.widgets.image_container import ImageContainer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QSplitter
 from PyQt5.QtCore import Qt
 
