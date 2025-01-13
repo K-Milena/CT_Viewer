@@ -18,18 +18,18 @@ PyQT/PySide, PyGTK, wxPython.
 • Należy dbać o stosowanie odpowiednich typów danych (w tym również definiować własne klasy) oraz rodzajów kolekcji do ich przechowywania. Istotne jest też właściwe podzielenie kodu na funkcje i moduły. 
 
 ### Termin oddania; 19.01.2025
-ISMED2024Z_ZAD2
-        ├── example_data
-        │   └── file.py
-        ├── README.md
-        ├── requirements.txt
-        └── src
-            ├── gui
-            │   ├── __init__.py
-            │   └── widgets
-            │       └── file.py
-            ├── images
-            │   └── file.py
-            ├── main.py
-            └── tests
-                └── file.py
+
+## Jak uruchomić?
+
+1. Sklonuj repozytorium.
+2. Zainstaluj zależności: `pip install -r requirements.txt`
+3. Uruchom program:
+
+```bash
+python main.py
+```
+
+### Instrukcja obsługi
+1. Załaduj wolumin CT kilkając w "Wybierz folder".
+2. Po wybraniu folderu, nawiguj skany po lewej stronie, klikając myszką na docelowy plik.
+3. Zaznacz prostokąt ROI przeciągając myszką naciskając lewy przycisk i odczytaj dane.
