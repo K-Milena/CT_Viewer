@@ -5,7 +5,14 @@ import numpy as np
 
 
 class ImageLabel(QLabel):
+    """
+    Widget QLabel rozszerzony o funkcjonalność wyświetlania obrazów DICOM,
+    zarządzania regionami zainteresowania (ROI) i regulacji okna diagnostycznego.
+    """
     def __init__(self, parent=None):
+        """
+        Inicjalizuje obiekt ImageLabel.
+        """
         super().__init__(parent)
         self.rois = []
         self.current_roi = None
@@ -13,10 +20,13 @@ class ImageLabel(QLabel):
         self.pixel_array = None
         self.pixel_spacing = None
         self.window_center = 0
-        self.window_width = 256  # Domyślna szerokość okna
+        self.window_width = 256  
         self.scaled_image = None
 
     def get_displayed_image_rect(self):
+        """
+        Oblicza i zwraca prostokąt zajmowany przez obraz w widgetcie.
+        """
         if not self.pixmap():
             return QRect()
 
@@ -33,33 +43,34 @@ class ImageLabel(QLabel):
         return QRect(offset_x, offset_y, displayed_width, displayed_height)
 
     def update_image(self):
+        """
+        Aktualizuje wyświetlany obraz na podstawie ustawień okna diagnostycznego.
+        """
         if self.pixel_array is None:
             return
 
-        # Skalowanie obrazu na podstawie WW i WC
         min_intensity = self.window_center - self.window_width / 2
         max_intensity = self.window_center + self.window_width / 2
 
-        # Skalowanie wartości pikseli do zakresu [0, 255] przy zachowaniu okna diagnostycznego
         scaled_array = np.clip(self.pixel_array, min_intensity, max_intensity)
         scaled_array = ((scaled_array - min_intensity) / (max_intensity - min_intensity) * 255).astype(np.uint8)
 
-        # Przekształć skalowaną tablicę numpy do QImage
         height, width = scaled_array.shape
         image = QImage(scaled_array.data, width, height, width, QImage.Format_Grayscale8)
 
-        # Przekształć QImage na QPixmap i wyświetl
         self.scaled_image = QPixmap.fromImage(image)
         self.setPixmap(self.scaled_image)
 
     def paintEvent(self, event):
+        """
+        Rysuje dodatkowe elementy, takie jak prostokąty ROI i ich statystyki.
+        """
         super().paintEvent(event)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         pen = QPen(Qt.red, 2)
         painter.setPen(pen)
 
-        # Rysowanie ROI
         for rect, roi_stats in self.rois:
             painter.drawRect(rect)
             stats_lines = roi_stats.split(", ")
@@ -67,11 +78,13 @@ class ImageLabel(QLabel):
                 text_position = QPoint(rect.x() + rect.width() + 5, rect.y() + 10 + i * 20)
                 painter.drawText(text_position, line)
 
-        # Rysowanie aktywnego prostokąta ROI
         if self.current_roi:
             painter.drawRect(self.current_roi)
 
     def mousePressEvent(self, event):
+        """
+        Obsługuje kliknięcie myszy w celu rozpoczęcia zaznaczania ROI lub usunięcia ROI.
+        """
         if event.button() == Qt.LeftButton:
             displayed_image_rect = self.get_displayed_image_rect()
             if displayed_image_rect.contains(event.pos()):
@@ -82,6 +95,9 @@ class ImageLabel(QLabel):
         self.update()
 
     def mouseMoveEvent(self, event):
+        """
+        Obsługuje ruch myszy w celu aktualizacji prostokąta ROI podczas zaznaczania.
+        """
         if event.buttons() == Qt.LeftButton and self.start_point:
             end_point = event.pos()
             displayed_image_rect = self.get_displayed_image_rect()
@@ -94,6 +110,9 @@ class ImageLabel(QLabel):
             self.update()
 
     def mouseReleaseEvent(self, event):
+        """
+        Obsługuje zakończenie zaznaczania ROI i oblicza statystyki dla wybranego obszaru.
+        """
         if event.button() == Qt.LeftButton and self.current_roi:
             roi_stats = self.calculate_roi_stats(self.current_roi)
             self.rois.append((self.current_roi, roi_stats))
@@ -102,6 +121,9 @@ class ImageLabel(QLabel):
             self.update()
 
     def remove_roi(self, point):
+        """
+        Usuwa ROI, jeśli kliknięto wewnątrz zaznaczonego obszaru.
+        """
         for rect, _ in self.rois:
             if rect.contains(point):
                 self.rois.remove((rect, _))
@@ -109,6 +131,9 @@ class ImageLabel(QLabel):
                 break
 
     def calculate_roi_stats(self, rect):
+        """
+        Oblicza statystyki (min, max, średnia, odchylenie standardowe) dla wybranego ROI.
+        """
         if self.pixel_array is None or self.pixel_spacing is None:
             return "Brak danych"
 

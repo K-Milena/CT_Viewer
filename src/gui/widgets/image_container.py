@@ -4,18 +4,28 @@ import pydicom
 from .image_label import ImageLabel
 
 class ImageContainer(QWidget):
+    """
+    Kontener do wyświetlania obrazów DICOM z możliwością regulacji okna diagnostycznego
+    i obsługą zdarzeń związanych z wyświetlanym obrazem.
+    """
     def __init__(self, parent=None):
+        """
+        Inicjalizuje obiekt ImageContainer.
+        """
         super().__init__(parent)
         self.init_ui()
 
     def init_ui(self):
+        """
+        Tworzy i konfiguruje elementy interfejsu użytkownika, w tym suwaki do regulacji okna diagnostycznego
+        oraz komponent do wyświetlania obrazu.
+        """
         layout = QVBoxLayout(self)
 
-        # Ustawienia okna diagnostycznego
         self.window_center_slider = QSlider(Qt.Horizontal)
         self.window_width_slider = QSlider(Qt.Horizontal)
 
-        self.window_center_slider.setRange(-1024, 1024)
+        self.window_center_slider.setRange(-1024, 2048)
         self.window_width_slider.setRange(1, 2048)
 
         self.window_center_slider.setValue(0)
@@ -32,7 +42,7 @@ class ImageContainer(QWidget):
 
         windowing_group = QGroupBox("Dopasuj okno")
         windowing_group.setLayout(windowing_layout)
-        windowing_group.setFixedHeight(80) 
+        windowing_group.setFixedHeight(80)  
         layout.addWidget(windowing_group)
 
         self.image_label = ImageLabel(self)
@@ -41,6 +51,10 @@ class ImageContainer(QWidget):
         layout.addWidget(self.image_label)
 
     def display_dicom(self, file_path):
+        """
+        Wczytuje plik DICOM, wyodrębnia macierz pikseli oraz informacje o rozdzielczości
+        i przekazuje je do komponentu wyświetlającego obraz.
+        """
         try:
             ds = pydicom.dcmread(file_path)
             pixel_array = ds.pixel_array
@@ -51,11 +65,18 @@ class ImageContainer(QWidget):
             self.image_label.setText(f"Błąd wczytywania: {e}")
 
     def update_windowing(self):
+        """
+        Aktualizuje wartości środka i szerokości okna diagnostycznego
+        oraz odświeża wyświetlany obraz.
+        """
         self.image_label.window_center = self.window_center_slider.value()
         self.image_label.window_width = self.window_width_slider.value()
         self.image_label.update_image()
 
     def resizeEvent(self, event):
+        """
+        Obsługuje zdarzenie zmiany rozmiaru widgetu i odpowiednio skaluje wyświetlany obraz.
+        """
         if self.image_label.pixmap():
             self.image_label.setPixmap(self.image_label.pixmap().scaled(
                 self.image_label.size(),
