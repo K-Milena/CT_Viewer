@@ -61,6 +61,14 @@ class ImageContainer(QWidget):
             self.image_label.pixel_array = pixel_array
             self.image_label.pixel_spacing = ds.PixelSpacing
             self.image_label.update_image()
+
+            if self.image_label.pixmap():
+                self.image_label.setPixmap(self.image_label.pixmap().scaled(
+                    self.image_label.size(),
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                ))
+            self.image_label.update()
         except Exception as e:
             self.image_label.setText(f"Błąd wczytywania: {e}")
 

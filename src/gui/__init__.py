@@ -10,8 +10,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle('CT Dicom')
-        self.setGeometry(100, 100, 800, 600)
+        self.setWindowTitle('Wizualizacja danych z tomografii komputerowej (CT)')
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -26,21 +25,20 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.col2)
 
         self.col1.setMinimumWidth(100)
-        self.col2.setMinimumWidth(300)
+        self.col2.setMinimumWidth(500)
 
-        splitter.setSizes([100, 300])
+        splitter.setSizes([100, 500])
 
         layout.addWidget(splitter)
         main_widget.setLayout(layout)
 
-
         self.col1.file_selected.connect(self.col2.display_dicom)
-        
+
+        self.showMaximized()
+
     def resizeEvent(self, event):
         """
         Obsługa zmiany rozmiaru okna.
         """
         super().resizeEvent(event)
         self.centralWidget().setMaximumSize(self.size())
-
-

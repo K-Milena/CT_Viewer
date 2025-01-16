@@ -61,6 +61,10 @@ class ImageLabel(QLabel):
         self.scaled_image = QPixmap.fromImage(image)
         self.setPixmap(self.scaled_image)
 
+        self.updateGeometry()
+        self.update()
+
+
     def paintEvent(self, event):
         """
         Rysuje dodatkowe elementy, takie jak prostokąty ROI i ich statystyki.
@@ -90,6 +94,8 @@ class ImageLabel(QLabel):
             if displayed_image_rect.contains(event.pos()):
                 self.start_point = event.pos()
                 self.current_roi = None
+            else:
+                self.start_point = None  # Kliknięcie poza obraz nie rozpoczyna zaznaczania
         elif event.button() == Qt.RightButton:
             self.remove_roi(event.pos())
         self.update()
@@ -99,26 +105,34 @@ class ImageLabel(QLabel):
         Obsługuje ruch myszy w celu aktualizacji prostokąta ROI podczas zaznaczania.
         """
         if event.buttons() == Qt.LeftButton and self.start_point:
-            end_point = event.pos()
             displayed_image_rect = self.get_displayed_image_rect()
+            end_point = event.pos()
 
-            constrained_start = displayed_image_rect.intersected(QRect(self.start_point, self.start_point))
-            constrained_end = displayed_image_rect.intersected(QRect(end_point, end_point))
+            # Ogranicz punkty do granic wyświetlanego obrazu
+            end_point.setX(max(displayed_image_rect.left(), min(displayed_image_rect.right(), end_point.x())))
+            end_point.setY(max(displayed_image_rect.top(), min(displayed_image_rect.bottom(), end_point.y())))
 
-            if not constrained_start.isNull() and not constrained_end.isNull():
-                self.current_roi = QRect(constrained_start.topLeft(), constrained_end.bottomRight()).normalized()
+            self.current_roi = QRect(self.start_point, end_point).normalized()
             self.update()
+
 
     def mouseReleaseEvent(self, event):
         """
         Obsługuje zakończenie zaznaczania ROI i oblicza statystyki dla wybranego obszaru.
         """
         if event.button() == Qt.LeftButton and self.current_roi:
-            roi_stats = self.calculate_roi_stats(self.current_roi)
-            self.rois.append((self.current_roi, roi_stats))
+            displayed_image_rect = self.get_displayed_image_rect()
+
+            # Ogranicz ROI do widocznego obrazu
+            self.current_roi = self.current_roi.intersected(displayed_image_rect)
+
+            if not self.current_roi.isEmpty():
+                roi_stats = self.calculate_roi_stats(self.current_roi)
+                self.rois.append((self.current_roi, roi_stats))
             self.current_roi = None
             self.start_point = None
             self.update()
+
 
     def remove_roi(self, point):
         """
@@ -158,3 +172,16 @@ class ImageLabel(QLabel):
 
             return f"MIN: {min_val}, MAX: {max_val}, AVG: {mean_val:.2f}, STD: {std_dev:.2f}, Size: {roi_area_mm2:.2f} mm²"
         return "Brak danych"
+
+    def resizeEvent(self, event):
+        """
+        Obsługuje zmianę rozmiaru QLabel i przelicza prostokąt wyświetlanego obrazka.
+        """
+        if self.pixmap():
+            self.setPixmap(self.pixmap().scaled(
+                self.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            ))
+        self.update()
+        super().resizeEvent(event)
