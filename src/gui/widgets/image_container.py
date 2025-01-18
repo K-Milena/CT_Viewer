@@ -81,6 +81,15 @@ class ImageContainer(QWidget):
         self.image_label.window_width = self.window_width_slider.value()
         self.image_label.update_image()
 
+        # Skalowanie do bieżących wymiarów QLabel
+        if self.image_label.pixmap():
+            self.image_label.setPixmap(self.image_label.pixmap().scaled(
+                self.image_label.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            ))
+
+
     def resizeEvent(self, event):
         """
         Obsługuje zdarzenie zmiany rozmiaru widgetu i odpowiednio skaluje wyświetlany obraz.
@@ -91,4 +100,5 @@ class ImageContainer(QWidget):
                 Qt.KeepAspectRatio,
                 Qt.SmoothTransformation
             ))
-        self.image_label.update()
+        super().resizeEvent(event)
+

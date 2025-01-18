@@ -59,10 +59,17 @@ class ImageLabel(QLabel):
         image = QImage(scaled_array.data, width, height, width, QImage.Format_Grayscale8)
 
         self.scaled_image = QPixmap.fromImage(image)
-        self.setPixmap(self.scaled_image)
+
+        # Skalowanie do rozmiaru QLabel
+        self.setPixmap(self.scaled_image.scaled(
+            self.size(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        ))
 
         self.updateGeometry()
         self.update()
+
 
 
     def paintEvent(self, event):
