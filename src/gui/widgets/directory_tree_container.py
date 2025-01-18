@@ -3,10 +3,11 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
 import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog,
-    QListWidget, QHBoxLayout, QMessageBox, QScrollArea
+    QListWidget, QMessageBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
+import pydicom
 
 
 class DirectoryTreeContainer(QWidget):
@@ -52,17 +53,30 @@ class DirectoryTreeContainer(QWidget):
 
     def populate_file_list(self, folder_path):
         """
-        Wyświetla listę plików DICOM w wybranym folderze.
+        Wyświetla listę plików DICOM w wybranym folderze, posortowaną według tagu DICOM.
         """
         self.file_list.clear()
         try:
-            files = [f for f in os.listdir(folder_path) if f.lower().endswith(".dcm")]
-            if files:
-                self.file_list.addItems(files)
-            else:
+            dicom_files = []
+            for file_name in os.listdir(folder_path):
+                if file_name.lower().endswith(".dcm"):
+                    file_path = os.path.join(folder_path, file_name)
+                    try:
+                        ds = pydicom.dcmread(file_path, stop_before_pixels=True)  
+                        instance_number = getattr(ds, "InstanceNumber", None)
+                        dicom_files.append((file_name, instance_number))
+                    except Exception as e:
+                        print(f"Błąd odczytu pliku {file_name}: {e}")
+
+            dicom_files.sort(key=lambda x: (x[1] is None, x[1]))
+
+            self.file_list.addItems([file[0] for file in dicom_files])
+
+            if not dicom_files:
                 QMessageBox.warning(self, "Brak plików", "Nie znaleziono plików DICOM w wybranym folderze.")
         except Exception as e:
             QMessageBox.critical(self, "Błąd", f"Nie udało się odczytać zawartości folderu: {e}")
+
 
     def load_file(self, item):
         """

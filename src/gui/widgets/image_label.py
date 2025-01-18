@@ -60,7 +60,6 @@ class ImageLabel(QLabel):
 
         self.scaled_image = QPixmap.fromImage(image)
 
-        # Skalowanie do rozmiaru QLabel
         self.setPixmap(self.scaled_image.scaled(
             self.size(),
             Qt.KeepAspectRatio,
@@ -102,7 +101,7 @@ class ImageLabel(QLabel):
                 self.start_point = event.pos()
                 self.current_roi = None
             else:
-                self.start_point = None  # Kliknięcie poza obraz nie rozpoczyna zaznaczania
+                self.start_point = None 
         elif event.button() == Qt.RightButton:
             self.remove_roi(event.pos())
         self.update()
@@ -115,7 +114,6 @@ class ImageLabel(QLabel):
             displayed_image_rect = self.get_displayed_image_rect()
             end_point = event.pos()
 
-            # Ogranicz punkty do granic wyświetlanego obrazu
             end_point.setX(max(displayed_image_rect.left(), min(displayed_image_rect.right(), end_point.x())))
             end_point.setY(max(displayed_image_rect.top(), min(displayed_image_rect.bottom(), end_point.y())))
 
@@ -130,7 +128,6 @@ class ImageLabel(QLabel):
         if event.button() == Qt.LeftButton and self.current_roi:
             displayed_image_rect = self.get_displayed_image_rect()
 
-            # Ogranicz ROI do widocznego obrazu
             self.current_roi = self.current_roi.intersected(displayed_image_rect)
 
             if not self.current_roi.isEmpty():
