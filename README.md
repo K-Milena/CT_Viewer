@@ -1,4 +1,4 @@
-# ismed2024Z_zad2_Kuna_Franczuk - Wizualizacja danych z tomografii komputerowej (CT) w postaci obrazów planarnych
+# ismed2024Z - Wizualizacja danych z tomografii komputerowej (CT) w postaci obrazów planarnych
 
 Oprogramowanie musi umożliwiać ładowanie zbioru plików DICOM pochodzących z pojedynczego badania CT  (pozwalając  na nawigacją pomiędzy seriami i skanami), regulację okna diagnostycznego (szerokości i położenia jego środka) oraz zaznaczania na obrazie jednego obszaru ROI, dla którego wyświetlane są statystyki: wartość średnia, odchylenie standardowe i rozmiar w mm2 (po skalowaniu zgodnie z danymi zapisanymi w DICOM).  
 
